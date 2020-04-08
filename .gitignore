@@ -1,0 +1,6 @@
+# dir
+.idea/
+pkg/
+
+# files
+*.iml
