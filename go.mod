@@ -1,4 +1,4 @@
-module moii
+module github.com/xiaxin/moii
 
 go 1.13
 
