@@ -277,7 +277,7 @@ func (ps invalidPairs) MarshalLogArray(enc zapcore.ArrayEncoder) error {
 }
 
 // default
-func Name(name string) *Logger {
+func Named(name string) *Logger {
 	log = log.Named(name)
 	return log
 }

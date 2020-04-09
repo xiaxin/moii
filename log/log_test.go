@@ -2,8 +2,12 @@ package log
 
 import "testing"
 
+
 func TestLog(t *testing.T) {
-	Info("test log")
+
+	log := Named("test")
+
+	log.Info("test log")
 
 	t.Log("X")
 }
