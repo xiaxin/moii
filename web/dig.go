@@ -19,9 +19,12 @@ func NewDig(container *dig.Container, ctx *gin.Context) *Dig {
 }
 
 // 中间件
-func NewDigMiddleware() gin.HandlerFunc {
+func NewDigMiddleware(container *dig.Container) gin.HandlerFunc {
+	if nil == container {
+		container = dig.New()
+	}
 	return func(ctx *gin.Context) {
-		dig := NewDig(dig.New(), ctx)
+		dig := NewDig(container, ctx)
 
 		dig.Provide(func() *gin.Context {
 			return ctx
