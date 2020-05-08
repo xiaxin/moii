@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func TestLog(t *testing.T) {
+func TestClient(t *testing.T) {
 
 	client := NewClient()
 
