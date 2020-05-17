@@ -16,5 +16,7 @@ func init() {
 }
 
 func NewClient() *colly.Collector {
-	return client.Clone()
+	client := client.Clone()
+	client.AllowURLRevisit = true
+	return client
 }
