@@ -1,12 +1,27 @@
 package web
 
-import "github.com/gocolly/colly/v2"
+import (
+	"github.com/gocolly/colly/v2"
+)
 
 var (
 	client = colly.NewCollector()
 )
 
+const (
+	UserAgent  = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/81.0.4044.138 Safari/537.36"
+	URLRevisit = true
+	Async      = false
+)
+
 func init() {
+	// 浏览器
+	client.UserAgent = UserAgent
+	// 允许重复访问（开启缓存可加速）
+	client.AllowURLRevisit = URLRevisit
+	// 同步
+	client.Async = Async
+
 	client.OnRequest(func(r *colly.Request) {
 		r.Headers.Set("Connection", "keep-alive")
 		r.Headers.Set("Accept", "*/*")
@@ -17,6 +32,5 @@ func init() {
 
 func NewClient() *colly.Collector {
 	client := client.Clone()
-	client.AllowURLRevisit = true
 	return client
 }
