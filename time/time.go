@@ -9,8 +9,9 @@ import (
 
 // TODO 待增加
 const (
-	FormatYmd = "2006-01-02"
-	FormatHis = "15:04:05"
+	FormatYmd    = "2006-01-02"
+	FormatHis    = "15:04:05"
+	FormatYmdHis = "2006-01-02 15:04:05"
 
 	FormatYear      = "2006"
 	FormatMonth     = "1"
@@ -73,6 +74,11 @@ func (d Duration) Shrink(c context.Context) (Duration, context.Context, context.
 	}
 	ctx, cancel := context.WithTimeout(c, xtime.Duration(d))
 	return d, ctx, cancel
+}
+
+//
+func GetNowString() string {
+	return xtime.Now().Format(FormatYmd + " " + FormatHis)
 }
 
 func GetTodayYMD() string {
