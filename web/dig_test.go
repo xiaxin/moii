@@ -2,7 +2,6 @@ package web
 
 import (
 	"github.com/xiaxin/moii/log"
-	"go.uber.org/dig"
 	"testing"
 )
 
@@ -15,7 +14,8 @@ func (ds *DigService) Say() {
 
 func TestDig(t *testing.T) {
 
-	dig := NewDig(dig.New(), nil)
+	dig := NewDig(nil)
+
 	dig.Provide(func() *DigService {
 		return &DigService{}
 	})
