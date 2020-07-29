@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/xiaxin/moii/log"
 	"time"
 )
 
@@ -55,9 +56,12 @@ func NewRedisPool(config *RedisConfig) *redis.Pool {
 				return nil, err
 			}
 
-			if _, err = c.Do("AUTH", config.Password); err != nil {
-				c.Close()
-				return nil, err
+			if len(config.Password) > 0 {
+				if _, err = c.Do("AUTH", config.Password); err != nil {
+					log.Info(err)
+					c.Close()
+					return nil, err
+				}
 			}
 
 			if _, err = c.Do("SELECT", config.DB); err != nil {
