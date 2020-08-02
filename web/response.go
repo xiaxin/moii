@@ -15,6 +15,12 @@ func Json500(ctx *gin.Context, data interface{}) {
 	ctx.JSON(500, data)
 }
 
+func JsonError(ctx *gin.Context, err error) {
+	Json500(ctx, gin.H{
+		"error": err.Error(),
+	})
+}
+
 func Json400(ctx *gin.Context, data interface{}) {
 	ctx.JSON(400, data)
 }

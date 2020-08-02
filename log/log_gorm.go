@@ -59,17 +59,24 @@ func (l *gormLog) GetDuration() string {
 }
 
 func (l *gormLog) toZapFields() []interface{} {
-	return []interface{}{
-	//zap.Any("source", l.source),
-	//  SQL
-		//  SQL
-		zap.Any("sql", l.sql),
-		//  执行时间
-		zap.Any("duration", l.duration),
-		//  SQL 中的值
-		//zap.Any("values", l.values),
-		//  其他
-		//zap.Any("other", l.other),
+	if len(l.other) == 0 {
+		return []interface{}{
+			//zap.Any("source", l.source),
+			//  SQL
+			//  SQL
+			zap.Any("sql", l.sql),
+			//  执行时间
+			zap.Any("duration", l.duration),
+			//  SQL 中的值
+			//zap.Any("values", l.values),
+			//  其他
+			//zap.Any("other", l.other),
+		}
+	} else {
+		return []interface{}{
+			//zap.Any("source", l.source),
+			zap.Any("other", l.other),
+		}
 	}
 }
 

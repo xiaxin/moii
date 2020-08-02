@@ -1,6 +1,9 @@
 package types
 
-import "strconv"
+import (
+	"strconv"
+	"time"
+)
 
 type String string
 
@@ -22,4 +25,12 @@ func (s String) Bool() (bool, error) {
 
 func (s String) String() string {
 	return string(s)
+}
+
+func (s String) Time(format string) (time.Time, error) {
+	tm, err := time.Parse(format, s.String())
+	if nil != err {
+		return time.Time{}, err
+	}
+	return tm, nil
 }
