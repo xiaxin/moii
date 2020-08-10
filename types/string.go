@@ -7,6 +7,10 @@ import (
 
 type String string
 
+func (s String) Int() (int, error) {
+	return strconv.Atoi(s.String())
+}
+
 func (s String) Int64() (int64, error) {
 	return strconv.ParseInt(s.String(), 10, 64)
 }

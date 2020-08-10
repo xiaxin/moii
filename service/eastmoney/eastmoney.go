@@ -31,7 +31,13 @@ func GetAllFundValue(callback func(r *colly.Response)) error {
 
 	client.OnResponse(callback)
 
+	client.OnRequest(func(r *colly.Request) {
+		//  请求添加 Referer 突破请求验证
+		r.Headers.Set("Referer", "http://fund.eastmoney.com/data/fundranking.html")
+	})
+
 	date := time.GetTodayYMD()
+
 	url := fmt.Sprintf("http://fund.eastmoney.com/data/rankhandler.aspx?op=ph&dt=kf&ft=all&rs=&gs=0&sc=zzf&st=desc&sd=%s&ed=%s&qdii=&tabSubtype=,,,,,&pi=1&pn=5680&dx=1&v=0.3971094993995896", date, date)
 
 	err = client.Request("GET", url, nil, nil, nil)
@@ -53,7 +59,6 @@ func GetAllFundCompany(callback func(r *colly.Response)) error {
 }
 
 //  获取基金列表
-// Deprecated: 方法废弃
 func GetAllFundList(callback func(r *colly.Response)) error {
 	var err error
 
@@ -114,5 +119,39 @@ func GetFundValueHistory(code string, page int, callback func(r *colly.Response)
 
 	err = client.Request("GET", url, nil, nil, nil)
 
+	return err
+}
+
+func GetFundDetail(code string, callback func(detail FundDetail)) error {
+	var err error
+
+	client := web.NewClient()
+
+	client.OnHTML(".info", func(e *colly.HTMLElement) {
+		var text string
+		fundDetail := FundDetail{
+			Code: code,
+		}
+
+		//  元素
+		tr := e.DOM.Find("tr")
+
+		// 基金类型
+		fundDetail.TypeName = tr.Eq(1).Find("td").Eq(1).Text()
+		// TODO fundDetail.Type
+
+		// 资产规模
+		text = tr.Eq(3).Find("td").Eq(0).Text()
+		fmt.Sscanf(text, "%f亿元（", &fundDetail.TotalMoney)
+
+		//  基金托管人
+		fundDetail.Bank = tr.Eq(4).Find("td").Eq(1).Text()
+
+		callback(fundDetail)
+	})
+
+	tmp := "http://fundf10.eastmoney.com/jbgk_%s.html"
+
+	err = client.Visit(fmt.Sprintf(tmp, code))
 	return err
 }
