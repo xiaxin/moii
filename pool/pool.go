@@ -25,6 +25,7 @@ const (
 // Task task to-do
 type Task struct {
 	Handler func(v ...interface{})
+	// 参数
 	Params  []interface{}
 }
 
@@ -40,6 +41,7 @@ type Pool struct {
 	taskChan       chan *Task
 	PanicHandler   func(interface{})
 	sync.Mutex
+	wg sync.WaitGroup
 }
 
 // 新建
@@ -68,11 +70,13 @@ func (p *Pool) GetRunningWorkers() uint64 {
 // 增
 func (p *Pool) incRunning() {
 	atomic.AddUint64(&p.runningWorkers, 1)
+	p.wg.Add(1)
 }
 
 // 减
 func (p *Pool) decRunning() {
 	atomic.AddUint64(&p.runningWorkers, ^uint64(0))
+	p.wg.Done()
 }
 
 //  添加任务到运行池
@@ -106,7 +110,6 @@ func (p *Pool) run() {
 
 	go func() {
 		defer func() {
-			log.Info("Xxx")
 			p.decRunning()
 			if r := recover(); r != nil {
 				if p.PanicHandler != nil {
@@ -164,4 +167,23 @@ func (p *Pool) Close() {
 	}
 
 	p.close()
+}
+
+/**
+	任务一加入列队，等待处理完关闭协程池。结束任务。
+ */
+func (p *Pool) WaitAndClose() {
+	if p.getState() == StateStoped {
+		return
+	}
+
+	p.setState(StateStoped) // stop put task
+
+	for len(p.taskChan) > 0 { // wait all task be consumed
+		time.Sleep(1e6) // reduce CPU load
+	}
+
+	p.close()
+
+	p.wg.Wait()
 }

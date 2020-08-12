@@ -5,12 +5,21 @@ import (
 	"net/http"
 )
 
+func Json(ctx *gin.Context, data interface{}) {
+	ctx.JSON(200, data)
+}
+
 func Json200(ctx *gin.Context, data interface{}) {
 	ctx.JSON(200, data)
 }
 
+func HTML(ctx *gin.Context, format string, values ...interface{}) {
+	ctx.Header("Content-Type", "text/html; charset=utf-8")
+	ctx.String(200, format, values...)
+}
+
 func ValidateFailed(ctx *gin.Context, err interface{}) {
-	ctx.JSON(500, gin.H{
+	Json500(ctx, gin.H{
 		"errno": 2,
 		"error": err,
 	})

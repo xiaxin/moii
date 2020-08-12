@@ -23,8 +23,8 @@ func (em *Eastmoney) HttpClient() *colly.Collector {
 	return web.NewClient()
 }
 
-//  获取基金净值
-func GetAllFundValue(callback func(r *colly.Response)) error {
+//  获取开放基金净值
+func GetAllOpenFundValue(callback func(r *colly.Response)) error {
 	var err error
 
 	client := web.NewClient()
@@ -38,11 +38,16 @@ func GetAllFundValue(callback func(r *colly.Response)) error {
 
 	date := time.GetTodayYMD()
 
-	url := fmt.Sprintf("http://fund.eastmoney.com/data/rankhandler.aspx?op=ph&dt=kf&ft=all&rs=&gs=0&sc=zzf&st=desc&sd=%s&ed=%s&qdii=&tabSubtype=,,,,,&pi=1&pn=5680&dx=1&v=0.3971094993995896", date, date)
+	url := fmt.Sprintf("http://fund.eastmoney.com/data/rankhandler.aspx?op=ph&dt=kf&ft=all&rs=&gs=0&sc=zzf&st=desc&sd=%s&ed=%s&qdii=&tabSubtype=,,,,,&pi=1&pn=7000&dx=1&v=0.3971094993995896", date, date)
 
 	err = client.Request("GET", url, nil, nil, nil)
 
 	return err
+}
+
+//  获取货币基金净值 TODO
+func GetAllCurrencyFundValue(callback func(r *colly.Response)) error {
+	return nil
 }
 
 //  获取基金公司
@@ -155,3 +160,4 @@ func GetFundDetail(code string, callback func(detail FundDetail)) error {
 	err = client.Visit(fmt.Sprintf(tmp, code))
 	return err
 }
+

@@ -103,6 +103,11 @@ func (r *Redis) CloseConnection() error {
 	return ErrRedisClosed
 }
 
+func (r *Redis) Send(command string, args ...interface{}) (err error) {
+	return r.pool.Get().Send(command, args...)
+}
+
+
 func (r *Redis) Do(command string, args ...interface{}) (reply interface{}, err error) {
 	c := r.pool.Get()
 

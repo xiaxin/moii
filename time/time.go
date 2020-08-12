@@ -23,6 +23,9 @@ const (
 	FormatHour       = "15"
 	FormatHour12     = "3"
 	FormatZeroHour12 = "03"
+
+	//  2020-01-01 00:00:00 时间戳
+	Unix2020         = 1577836800
 )
 
 // Time be used to MySql timestamp converting.
@@ -120,4 +123,19 @@ func Get2018Year() (xtime.Time, xtime.Time) {
 	endDate, _ := xtime.Parse(FormatYmd, "2018-12-31")
 
 	return startDate, endDate
+}
+
+//  时间戳 从2020年开始计算
+func NowUnix2020() int64 {
+	now := xtime.Now()
+
+	return now.Unix() - Unix2020
+}
+
+func TimeScoreEncode(score int64) int64 {
+	return score * 100000000 + NowUnix2020()
+}
+
+func TimeScoreDecode(score int64) int64 {
+	return score / 100000000
 }
