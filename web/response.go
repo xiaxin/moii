@@ -40,6 +40,17 @@ func Json400(ctx *gin.Context, data interface{}) {
 	ctx.JSON(400, data)
 }
 
+func Json403(ctx *gin.Context, data interface{}) {
+	ctx.JSON(403, data)
+}
+
+func JsonNoLogin(ctx *gin.Context) {
+	Json403(ctx, gin.H{
+		"errno": 1,
+		"error": "no login",
+	})
+}
+
 func Redirect(ctx *gin.Context, url string) {
 	ctx.Redirect(http.StatusMovedPermanently, url)
 }

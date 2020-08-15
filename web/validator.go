@@ -8,6 +8,7 @@ import (
 	validator "github.com/go-playground/validator/v10"
 	zh_translations "github.com/go-playground/validator/v10/translations/zh"
 	"reflect"
+	"strconv"
 	"strings"
 	"sync"
 )
@@ -81,18 +82,26 @@ func Validate(ctx *gin.Context, obj interface{}) map[string]string {
 			m = tranFn.FieldTranslate()
 		}
 
-		errs := err.(validator.ValidationErrors)
+		switch err.(type) {
+		case validator.ValidationErrors:
+			errs := err.(validator.ValidationErrors)
 
-		for _, e := range errs {
-			transtr := e.Translate(trans)
-			field := e.Field()
+			for _, e := range errs {
+				transtr := e.Translate(trans)
+				field := e.Field()
 
-			//判断错误字段是否在命名中，如果在，则替换错误信息中的字段
-			if rp, ok := m[e.Field()]; ok {
-				resp[field] = strings.Replace(transtr, e.Field(), rp, 1)
-			} else {
-				resp[field] = transtr
+				//判断错误字段是否在命名中，如果在，则替换错误信息中的字段
+				if rp, ok := m[e.Field()]; ok {
+					resp[field] = strings.Replace(transtr, e.Field(), rp, 1)
+				} else {
+					resp[field] = transtr
+				}
 			}
+
+			return resp
+		case *strconv.NumError:
+			// TODO  输入字符串 numeric 时 报错
+			resp["input"] = err.Error()
 		}
 
 		return resp
