@@ -1,10 +1,10 @@
 package db
 
 import (
+	"errors"
 	"fmt"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/jinzhu/gorm"
-	"github.com/xiaxin/moii/log"
 	xtime "github.com/xiaxin/moii/time"
 	"time"
 )
@@ -34,9 +34,9 @@ func init() {
 }
 
 // NewMySQL new db and retry connection when has error.
-func NewMysql(c *MysqlConfig) *gorm.DB {
+func NewMysql(c *MysqlConfig) (*gorm.DB, error) {
 	if nil == c {
-		return nil
+		return nil, errors.New("mysql config is nil")
 	}
 
 	dsn := fmt.Sprintf(DsnStr, c.User, c.Password, c.Host, c.Port, c.DbName)
@@ -44,8 +44,7 @@ func NewMysql(c *MysqlConfig) *gorm.DB {
 	db, err := gorm.Open("mysql", dsn)
 
 	if err != nil {
-		log.Errorf("db dsn(%s) error: %v", dsn, err)
-		panic(err)
+		return nil, err
 	}
 
 	//  设置日志级别
@@ -64,5 +63,5 @@ func NewMysql(c *MysqlConfig) *gorm.DB {
 	db.DB().SetMaxOpenConns(c.Active)
 	db.DB().SetConnMaxLifetime(time.Duration(c.IdleTimeout) * time.Second)
 
-	return db
+	return db, nil
 }

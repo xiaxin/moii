@@ -12,7 +12,7 @@ type TestTable struct {
 func TestMysql(t *testing.T) {
 	log := log.Named("test")
 
-	db := NewMysql(&MysqlConfig{
+	db, err := NewMysql(&MysqlConfig{
 		User:        "root",
 		Host:        "127.0.0.1",
 		Password:    "880728",
@@ -25,11 +25,16 @@ func TestMysql(t *testing.T) {
 		Logger: log.NewGorm(),
 	})
 
+	if nil != err {
+		log.DsError(err)
+		return
+	}
+
 	if err := db.DropTableIfExists(&TestTable{}).Error; nil != err {
-		log.Error(err)
+		t.Error(err)
 	}
 
 	if err := db.AutoMigrate(&TestTable{}).Error; nil != err {
-		log.Error(err)
+		t.Error(err)
 	}
 }

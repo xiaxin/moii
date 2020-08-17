@@ -192,6 +192,14 @@ func (l *Logger) Fatalw(msg string, keysAndValues ...interface{}) {
 	l.log(zap.FatalLevel, msg, nil, keysAndValues)
 }
 
+func (l *Logger) DsError(args ...interface{}) {
+	l.DsLog().Error(args...)
+}
+
+func (l *Logger) DsErrorf(template string, args ...interface{})  {
+	l.DsLog().Errorf(template, args...)
+}
+
 func (l *Logger) Sync() error {
 	return l.base.Sync()
 }
@@ -314,6 +322,23 @@ func Fatalf(template string, args ...interface{}) {
 	log.Fatalf(template, args...)
 }
 
+func Panic(template string, args ...interface{}) {
+	log.Panicf(template, args...)
+}
+
 func Clone() *Logger {
 	return log.Clone()
+}
+
+// display stacktrace
+func (l *Logger) DsLog() *Logger {
+	return l.Clone(zap.AddStacktrace(zap.FatalLevel))
+}
+
+func DsError(args ...interface{}) {
+	log.DsError(args...)
+}
+
+func DsErrorf(template string, args ...interface{}) {
+	log.DsErrorf(template, args...)
 }
