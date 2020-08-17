@@ -5,6 +5,7 @@ import (
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
+	"os"
 	"time"
 )
 
@@ -341,4 +342,14 @@ func DsError(args ...interface{}) {
 
 func DsErrorf(template string, args ...interface{}) {
 	log.DsErrorf(template, args...)
+}
+
+func ExitError(args ...interface{}) {
+	log.DsLog().Error(args...)
+	os.Exit(1)
+}
+
+func ExitErrorf(template string, args ...interface{}) {
+	log.DsLog().Errorf(template, args...)
+	os.Exit(1)
 }
