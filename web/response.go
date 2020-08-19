@@ -19,7 +19,7 @@ func HTML(ctx *gin.Context, format string, values ...interface{}) {
 }
 
 func ValidateFailed(ctx *gin.Context, err interface{}) {
-	Json500(ctx, gin.H{
+	Json400(ctx, gin.H{
 		"errno": 2,
 		"error": err,
 	})
@@ -30,7 +30,7 @@ func Json500(ctx *gin.Context, data interface{}) {
 }
 
 func JsonError(ctx *gin.Context, err error) {
-	Json500(ctx, gin.H{
+	Json400(ctx, gin.H{
 		"errno": 1,
 		"error": err.Error(),
 	})

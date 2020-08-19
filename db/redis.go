@@ -3,6 +3,7 @@ package db
 import (
 	"errors"
 	"github.com/gomodule/redigo/redis"
+	"github.com/xiaxin/moii/db/redis/lock"
 	"github.com/xiaxin/moii/log"
 	"time"
 )
@@ -118,4 +119,20 @@ func (r *Redis) Do(command string, args ...interface{}) (reply interface{}, err 
 	}
 
 	return c.Do(command, args...)
+}
+
+func (r *Redis) Lock(resource, token string, timeout int, fc func(ok bool) error) error {
+	lock, ok, err := lock.TryLock(r.pool.Get(), resource, token, timeout)
+
+	if err != nil {
+		return err
+	}
+
+	ren := fc(ok)
+
+	if ok {
+		defer lock.Unlock()
+	}
+
+	return ren
 }
