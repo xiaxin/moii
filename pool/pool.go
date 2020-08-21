@@ -67,13 +67,13 @@ func (p *Pool) GetRunningWorkers() uint64 {
 	return atomic.LoadUint64(&p.runningWorkers)
 }
 
-// 增
+// 增加运行数量
 func (p *Pool) incRunning() {
 	atomic.AddUint64(&p.runningWorkers, 1)
 	p.wg.Add(1)
 }
 
-// 减
+// 减少运行数量
 func (p *Pool) decRunning() {
 	atomic.AddUint64(&p.runningWorkers, ^uint64(0))
 	p.wg.Done()
@@ -90,7 +90,30 @@ func (p *Pool) Process(task *Task) error {
 	// 判断是否需要增加一个Worker
 	p.Lock()
 	if p.GetRunningWorkers() < p.GetCapacity() {
-		p.run()
+
+		p.incRunning()
+		go func() {
+			defer func() {
+				p.decRunning()
+				if r := recover(); r != nil {
+					if p.PanicHandler != nil {
+						p.PanicHandler(r)
+					} else {
+						log.Infof("Worker panic: %s\n", r)
+					}
+				}
+			}()
+
+			for {
+				select {
+				case task, ok := <-p.taskChan:
+					if !ok {
+						return
+					}
+					task.Handler(task.Params...)
+				}
+			}
+		}()
 	}
 	p.Unlock()
 
@@ -102,34 +125,6 @@ func (p *Pool) Process(task *Task) error {
 	p.Unlock()
 
 	return nil
-}
-
-//  启动运行
-func (p *Pool) run() {
-	p.incRunning()
-
-	go func() {
-		defer func() {
-			p.decRunning()
-			if r := recover(); r != nil {
-				if p.PanicHandler != nil {
-					p.PanicHandler(r)
-				} else {
-					log.Infof("Worker panic: %s\n", r)
-				}
-			}
-		}()
-
-		for {
-			select {
-			case task, ok := <-p.taskChan:
-				if !ok {
-					return
-				}
-				task.Handler(task.Params...)
-			}
-		}
-	}()
 }
 
 func (p *Pool) getState() int64 {

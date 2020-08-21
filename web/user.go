@@ -9,7 +9,7 @@ const (
 )
 
 type User interface {
-	GetUid() uint64
+	GetUid() uint
 	GetUserName() string
 	GetToken() string
 }
