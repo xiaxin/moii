@@ -9,6 +9,12 @@ func Json(ctx *gin.Context, data interface{}) {
 	ctx.JSON(200, data)
 }
 
+func JsonData(ctx *gin.Context, data interface{}) {
+	Json(ctx, gin.H{
+		"data": data,
+	})
+}
+
 func Json200(ctx *gin.Context, data interface{}) {
 	ctx.JSON(200, data)
 }

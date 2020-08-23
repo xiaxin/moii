@@ -26,6 +26,9 @@ const (
 
 	//  2020-01-01 00:00:00 时间戳
 	Unix2020         = 1577836800
+
+
+	Day                 = 24 * xtime.Hour
 )
 
 // Time be used to MySql timestamp converting.
