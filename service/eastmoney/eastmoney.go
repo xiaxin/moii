@@ -5,6 +5,7 @@ import (
 	"github.com/gocolly/colly/v2"
 	"github.com/xiaxin/moii/time"
 	"github.com/xiaxin/moii/web"
+	"strings"
 )
 
 const (
@@ -132,25 +133,45 @@ func GetFundDetail(code string, callback func(detail FundDetail)) error {
 
 	client := web.NewClient()
 
-	client.OnHTML(".info", func(e *colly.HTMLElement) {
-		var text string
+	client.OnHTML("body", func(e *colly.HTMLElement) {
+
 		fundDetail := FundDetail{
 			Code: code,
 		}
 
-		//  元素
-		tr := e.DOM.Find("tr")
+		stateDom := e.DOM.Find(".col-right").Find(".row").Eq(1).Find("span")
 
-		// 基金类型
-		fundDetail.TypeName = tr.Eq(1).Find("td").Eq(1).Text()
-		// TODO fundDetail.Type
+		fundDetail.BuyState  = stateDom.Eq(0).Text()
+		if 0 == strings.Compare(fundDetail.BuyState, "限大额 ") {
+			fundDetail.BuyStateRemark = "限大额 " + stateDom.Eq(2).Text()
+			fundDetail.BuyState  = "开放申购 "
+			fundDetail.SellState = stateDom.Eq(3).Text()
+		} else {
+			fundDetail.SellState = stateDom.Eq(2).Text()
+		}
 
-		// 资产规模
-		text = tr.Eq(3).Find("td").Eq(0).Text()
-		fmt.Sscanf(text, "%f亿元（", &fundDetail.TotalMoney)
+		//  基本概况
+		infoDom := e.DOM.Find(".info")
+		{
+			//  元素
+			tr := infoDom.Find("tr")
 
-		//  基金托管人
-		fundDetail.Bank = tr.Eq(4).Find("td").Eq(1).Text()
+			//  基金全称
+			fundDetail.Name = tr.Eq(0).Find("td").Eq(1).Text()
+			fundDetail.Alias = tr.Eq(0).Find("td").Eq(0).Text()
+
+			// 基金类型
+			fundDetail.TypeName = tr.Eq(1).Find("td").Eq(1).Text()
+			// TODO fundDetail.Type
+
+			// 资产规模
+			text := tr.Eq(3).Find("td").Eq(0).Text()
+			fmt.Sscanf(text, "%f亿元（", &fundDetail.TotalMoney)
+
+			//  基金托管人
+			fundDetail.Bank = tr.Eq(4).Find("td").Eq(1).Text()
+		}
+
 
 		callback(fundDetail)
 	})
