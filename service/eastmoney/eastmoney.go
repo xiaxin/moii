@@ -39,7 +39,7 @@ func GetAllOpenFundValue(callback func(r *colly.Response)) error {
 
 	date := time.GetTodayYMD()
 
-	url := fmt.Sprintf("http://fund.eastmoney.com/data/rankhandler.aspx?op=ph&dt=kf&ft=all&rs=&gs=0&sc=zzf&st=desc&sd=%s&ed=%s&qdii=&tabSubtype=,,,,,&pi=1&pn=7000&dx=1&v=0.3971094993995896", date, date)
+	url := fmt.Sprintf("http://fund.eastmoney.com/data/rankhandler.aspx?op=ph&dt=kf&ft=all&rs=&gs=0&sc=rzdf&st=desc&sd=%s&ed=%s&qdii=&tabSubtype=,,,,,&pi=1&pn=7000&dx=1&v=0.3971094993995896", date, date)
 
 	err = client.Request("GET", url, nil, nil, nil)
 

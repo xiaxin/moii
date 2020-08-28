@@ -38,6 +38,9 @@ func GetUser(ctx *gin.Context) (User, bool) {
 }
 
 
+func SetDig(ctx *gin.Context, dig *dig.Dig) {
+	ctx.Set(KeyDig, dig)
+}
 
 //  从上下文获取中间件
 func GetDig(ctx *gin.Context) (*dig.Dig, bool) {
@@ -45,4 +48,8 @@ func GetDig(ctx *gin.Context) (*dig.Dig, bool) {
 	di, ok := diI.(*dig.Dig)
 	exists := di != nil && ok
 	return di, exists
+}
+
+func Next(ctx *gin.Context) {
+	ctx.Next()
 }
