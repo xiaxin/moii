@@ -1,16 +1,17 @@
 package web
 
 import (
+	"reflect"
+	"strconv"
+	"strings"
+	"sync"
+
 	"github.com/gin-gonic/gin"
 	"github.com/gin-gonic/gin/binding"
 	zh "github.com/go-playground/locales/zh"
 	ut "github.com/go-playground/universal-translator"
 	validator "github.com/go-playground/validator/v10"
 	zh_translations "github.com/go-playground/validator/v10/translations/zh"
-	"reflect"
-	"strconv"
-	"strings"
-	"sync"
 )
 
 var (
@@ -49,6 +50,7 @@ func (v *DefaultValidator) ValidateStruct(obj interface{}) error {
 	}
 	return nil
 }
+
 // Engine 返回支持`StructValidator`实现的底层验证引擎
 func (v *DefaultValidator) Engine() interface{} {
 	v.lazyinit()
@@ -109,7 +111,6 @@ func Validate(ctx *gin.Context, obj interface{}) map[string]string {
 	return nil
 }
 
-
-type ValidateFieldTranslates interface{
+type ValidateFieldTranslates interface {
 	FieldTranslate() map[string]string
 }
