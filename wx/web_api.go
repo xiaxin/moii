@@ -13,15 +13,21 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/xiaxin/moii/log"
 )
 
 var (
+	// DefaultClient 默认客户端
 	DefaultClient = NewHttpClient()
-	LogoutSign    = make(map[int]int)
+	// LogoutSign 退出码
+	LogoutSign = make(map[int]int)
 )
 
+// Header TODO
 type Header map[string]string
 
+// init 退出码
 func init() {
 	LogoutSign[1100] = 1
 	LogoutSign[1101] = 1
@@ -29,15 +35,16 @@ func init() {
 	LogoutSign[1205] = 1
 }
 
-func WebJsLogin(common *WebConfig) (string, error) {
+// WebJsLogin TODO
+func WebJsLogin(common *WxConfig) (string, error) {
 
 	km := url.Values{}
-	km.Add("appid", common.AppId)
+	km.Add("AppID", common.AppID)
 	km.Add("fun", "new")
 	km.Add("lang", common.Lang)
-	km.Add("redirect_uri", common.RedirectUri)
+	km.Add("redirect_uri", common.RedirectURI)
 	km.Add("_", strconv.FormatInt(time.Now().Unix(), 10))
-	uri := common.LoginUrl + "/jslogin?" + km.Encode()
+	uri := common.LoginURL + "/jslogin?" + km.Encode()
 
 	body, err := DefaultClient.Get(uri, nil)
 
@@ -52,11 +59,12 @@ func WebJsLogin(common *WebConfig) (string, error) {
 	return ss[1], nil
 }
 
-func WebNewLoginPage(common *WebConfig, xc *WebXmlConfig, uri string) ([]*http.Cookie, error) {
+// WebNewLoginPage 获取登录 Cookie 数据
+func WebNewLoginPage(common *WxConfig, xc *WebXMLConfig, uri string) ([]*http.Cookie, error) {
 	u, _ := url.Parse(uri)
 	km := u.Query()
 	km.Add("fun", "new")
-	uri = common.CgiUrl + "/webwxnewloginpage?" + km.Encode()
+	uri = common.CgiURL + "/webwxnewloginpage?" + km.Encode()
 	resp, err := DefaultClient.FetchReponse("GET", uri, []byte(""), Header{})
 
 	if nil != err {
@@ -73,15 +81,15 @@ func WebNewLoginPage(common *WebConfig, xc *WebXmlConfig, uri string) ([]*http.C
 	return resp.Cookies(), nil
 }
 
-// TODO 针对返回值 进行合理性优化
-func WebLogin(common *WebConfig, uuid, tip string) (string, error) {
+// WebLogin TODO 针对返回值 进行合理性优化
+func WebLogin(common *WxConfig, uuid, tip string) (string, error) {
 	km := url.Values{}
 	km.Add("tip", tip)
 	km.Add("uuid", uuid)
 	km.Add("r", strconv.FormatInt(time.Now().Unix(), 10))
 	km.Add("_", strconv.FormatInt(time.Now().Unix(), 10))
 	km.Add("loginicon", "true")
-	uri := common.LoginUrl + "/cgi-bin/mmwebwx-bin/login?" + km.Encode()
+	uri := common.LoginURL + "/cgi-bin/mmwebwx-bin/login?" + km.Encode()
 	body, err := DefaultClient.Get(uri, nil)
 
 	if nil != err {
@@ -89,6 +97,7 @@ func WebLogin(common *WebConfig, uuid, tip string) (string, error) {
 	}
 
 	strb := string(body)
+	// 用户点击确认登录
 	if strings.Contains(strb, "window.code=200") &&
 		strings.Contains(strb, "window.redirect_uri") {
 		ss := strings.Split(strb, "\"")
@@ -101,13 +110,14 @@ func WebLogin(common *WebConfig, uuid, tip string) (string, error) {
 	return "", fmt.Errorf("login response, %s", strb)
 }
 
-func WebWxInit(comm *WebConfig, ce *WebXmlConfig) ([]byte, error) {
+// WebWxInit WxInit
+func WebWxInit(comm *WxConfig, ce *WebXMLConfig) ([]byte, error) {
 	km := url.Values{}
 	km.Add("pass_ticket", ce.PassTicket)
 	km.Add("skey", ce.Skey)
 	km.Add("r", strconv.FormatInt(time.Now().Unix(), 10))
 
-	uri := comm.CgiUrl + "/webwxinit?" + km.Encode()
+	uri := comm.CgiURL + "/webwxinit?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -129,12 +139,13 @@ func WebWxInit(comm *WebConfig, ce *WebXmlConfig) ([]byte, error) {
 	return body, nil
 }
 
-func WebWxStatusNotify(config *WebConfig, ce *WebXmlConfig, bot *User) (int, error) {
+// WebWxStatusNotify TODO
+func WebWxStatusNotify(config *WxConfig, ce *WebXMLConfig, bot *User) (int, error) {
 	km := url.Values{}
 	km.Add("pass_ticket", ce.PassTicket)
 	km.Add("lang", config.Lang)
 
-	uri := config.CgiUrl + "/webwxstatusnotify?" + km.Encode()
+	uri := config.CgiURL + "/webwxstatusnotify?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -146,7 +157,7 @@ func WebWxStatusNotify(config *WebConfig, ce *WebXmlConfig, bot *User) (int, err
 		Code:         3,
 		FromUserName: bot.UserName,
 		ToUserName:   bot.UserName,
-		ClientMsgId:  int(time.Now().Unix()),
+		ClientMsgID:  int(time.Now().Unix()),
 	}
 
 	b, _ := json.Marshal(js)
@@ -166,12 +177,13 @@ func WebWxStatusNotify(config *WebConfig, ce *WebXmlConfig, bot *User) (int, err
 	return response.BaseResponse.Ret, nil
 }
 
-func WebWxGetContact(config *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie) ([]byte, error) {
+// WebWxGetContact 获取联系人（没有组员信息）
+func WebWxGetContact(config *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie) ([]byte, error) {
 	km := url.Values{}
 	km.Add("r", strconv.FormatInt(time.Now().Unix(), 10))
 	km.Add("seq", "0")
 	km.Add("skey", ce.Skey)
-	uri := config.CgiUrl + "/webwxgetcontact?" + km.Encode()
+	uri := config.CgiURL + "/webwxgetcontact?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -192,7 +204,8 @@ func WebWxGetContact(config *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie
 	return body, nil
 }
 
-func SyncCheck(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, server string, skl *SyncKeyList) (retcode int, selector int, err error) {
+// SyncCheck 心跳
+func SyncCheck(comm *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie, server string, skl *SyncKeyList) (retcode int, selector int, err error) {
 	km := url.Values{}
 	km.Add("r", strconv.FormatInt(time.Now().Unix()*1000, 10))
 	km.Add("sid", ce.Wxsid)
@@ -235,10 +248,13 @@ func SyncCheck(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, server
 		selector, _ = strconv.Atoi(sub[2])
 	}
 
+	log.Infof("[wx-api] [sync-check] response: retcode %d selector %d", retcode, selector)
+
 	return retcode, selector, nil
 }
 
-func WebWxSync(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, msg chan []byte, skl *SyncKeyList) ([]*http.Cookie, error) {
+// WebWxSync 消息检查 TODO: 此方法与业务混搭，应该分离。接口只返回业务需要数据。
+func WebWxSync(comm *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie, msg chan []byte, skl *SyncKeyList) ([]*http.Cookie, error) {
 
 	km := url.Values{}
 	km.Add("skey", ce.Skey)
@@ -246,7 +262,7 @@ func WebWxSync(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, msg ch
 	km.Add("lang", comm.Lang)
 	km.Add("pass_ticket", ce.PassTicket)
 
-	uri := comm.CgiUrl + "/webwxsync?" + km.Encode()
+	uri := comm.CgiURL + "/webwxsync?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -282,6 +298,7 @@ func WebWxSync(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, msg ch
 	}
 
 	msg <- body
+	// TODO 增加检查消息日志
 
 	skl.List = skl.List[:0]
 	skl1 := response.SyncKey
@@ -291,11 +308,12 @@ func WebWxSync(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, msg ch
 	return resp.Cookies(), nil
 }
 
-func WebWxBatchGetContact(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, cl []*User) ([]byte, error) {
+// WebWxBatchGetContact 批量获取联系人信息
+func WebWxBatchGetContact(comm *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie, cl []*User) ([]byte, error) {
 	km := url.Values{}
 	km.Add("r", strconv.FormatInt(time.Now().Unix(), 10))
 	km.Add("type", "ex")
-	uri := comm.CgiUrl + "/webwxbatchgetcontact?" + km.Encode()
+	uri := comm.CgiURL + "/webwxbatchgetcontact?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -329,6 +347,7 @@ func WebWxBatchGetContact(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Coo
 	return body, nil
 }
 
+// GetLoginAvatar 获取 Login 接口的 Avatar
 func GetLoginAvatar(resp string) (string, error) {
 	match := regexp.MustCompile(`window.userAvatar = '(.+)'`).
 		FindStringSubmatch(resp)
@@ -338,13 +357,14 @@ func GetLoginAvatar(resp string) (string, error) {
 	return match[1], nil
 }
 
-func WebWxSendMsg(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie,
+// WebWxSendMsg 发送信息
+func WebWxSendMsg(comm *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie,
 	from, to string, msg string) ([]byte, error) {
 
 	km := url.Values{}
 	km.Add("pass_ticket", ce.PassTicket)
 
-	uri := comm.CgiUrl + "/webwxsendmsg?" + km.Encode()
+	uri := comm.CgiURL + "/webwxsendmsg?" + km.Encode()
 
 	js := InitRequest{
 		BaseRequest: &BaseRequest{
@@ -373,15 +393,16 @@ func WebWxSendMsg(comm *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie,
 	return body, nil
 }
 
-func WebWxOplog(conf *WebConfig, ce *WebXmlConfig, cookies []*http.Cookie, user *User, name string) ([]byte, error) {
+// WebWxOplog 操作
+func WebWxOplog(conf *WxConfig, ce *WebXMLConfig, cookies []*http.Cookie, user *User, name string) ([]byte, error) {
 	km := url.Values{}
 	km.Add("pass_ticket", ce.PassTicket)
 
-	uri := conf.CgiUrl + "/webwxoplog?" + km.Encode()
+	uri := conf.CgiURL + "/webwxoplog?" + km.Encode()
 
 	js := &OplogRequest{
 		UserName:   user.UserName,
-		CmdId:      2,
+		CmdID:      2,
 		RemarkName: name,
 		BaseRequest: &BaseRequest{
 			ce.Wxuin,

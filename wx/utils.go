@@ -1,9 +1,10 @@
 package wx
 
 import (
-	jsoniter "github.com/json-iterator/go"
 	"math/rand"
 	"time"
+
+	jsoniter "github.com/json-iterator/go"
 )
 
 var json = jsoniter.ConfigCompatibleWithStandardLibrary
@@ -13,7 +14,7 @@ func unmarshal(msg []byte, v interface{}) error {
 	return err
 }
 
-//  解析消息体
+// ParseReceiveResponse 解析消息体
 func ParseReceiveResponse(msg []byte) (*ReceiveResponse, error) {
 
 	message := new(ReceiveResponse)
@@ -25,19 +26,21 @@ func ParseReceiveResponse(msg []byte) (*ReceiveResponse, error) {
 	return message, nil
 }
 
-//  解析初始化信息
+// ParseInitResponse 解析初始化信息
 func ParseInitResponse(msg []byte) (*InitResponse, error) {
 	init := new(InitResponse)
 	err := unmarshal(msg, init)
 	return init, err
 }
 
+// ParseContactResponse 解析 联系人响应
 func ParseContactResponse(msg []byte) (*ContactResponse, error) {
 	contact := new(ContactResponse)
 	err := unmarshal(msg, contact)
 	return contact, err
 }
 
+// GetRandomStringFromNum 生成随机数字符串
 func GetRandomStringFromNum(length int) string {
 	bytes := []byte("0123456789")
 	result := []byte{}
@@ -48,6 +51,7 @@ func GetRandomStringFromNum(length int) string {
 	return string(result)
 }
 
+// RealTargetUserName 处理显示名称
 func RealTargetUserName(session *Session, msg *ReceivedMessage) string {
 	if session.Owner.UserName == msg.FromUserName {
 		return msg.ToUserName

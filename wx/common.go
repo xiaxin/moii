@@ -14,26 +14,49 @@ import (
 
 const (
 	// msg types
-	MSG_TEXT        = 1     // text message
-	MSG_IMG         = 3     // image message
-	MSG_VOICE       = 34    // voice message
-	MSG_FV          = 37    // friend verification message
-	MSG_PF          = 40    // POSSIBLEFRIEND_MSG
-	MSG_SCC         = 42    // shared contact card
-	MSG_VIDEO       = 43    // video message
-	MSG_EMOTION     = 47    // gif
-	MSG_LOCATION    = 48    // location message
-	MsgLink         = 49    // shared link message
-	MSG_VOIP        = 50    // VOIPMSG
-	MSG_INIT        = 51    // wechat init message
-	MSG_VOIPNOTIFY  = 52    // VOIPNOTIFY
-	MSG_VOIPINVITE  = 53    // VOIPINVITE
-	MSG_SHORT_VIDEO = 62    // short video message
-	MSG_SYSNOTICE   = 9999  // SYSNOTICE
-	MSG_SYS         = 10000 // system message
-	MSG_WITHDRAW    = 10002 // withdraw notification message
+	MsgText = 1 // text message
+
+	MsgImg    = 3  // image message
+	MSG_VOICE = 34 // voice message
+	MsgVoice  = 35
+
+	MsgFV       = 37 // friend verification message
+	MsgPF       = 40 // POSSIBLEFRIEND_MSG
+	MsgSCC      = 42 // shared contact card
+	MSG_VIDEO   = 43 // video message
+	MSG_EMOTION = 47 // gif
+	MsgEmotion  = 47
+
+	MSG_LOCATION = 48 // location message
+	MsgLocation  = 48
+
+	MsgLink = 49 // shared link message
+
+	MSG_VOIP = 50 // VOIPMSG
+	MsgVoip  = 50
+
+	MsgInit = 51 // wechat init message
+
+	MSG_VOIPNOTIFY = 52 // VOIPNOTIFY
+	MsgVoipnotify  = 52
+
+	MSG_VOIPINVITE = 53 // VOIPINVITE
+	MsgVoipinvite  = 53
+
+	MSG_SHORT_VIDEO = 62 // short video message
+	MsgShortVideo   = 62
+
+	MSG_SYSNOTICE = 9999 // SYSNOTICE
+	MsgSysNotice  = 9999
+
+	MSG_SYS = 10000 // system message
+	MsgSys  = 10000
+
+	MSG_WITHDRAW = 10002 // withdraw notification message
+	MsgWithDraw  = 10002
 )
 
+// User 用户
 type User struct {
 	Uin               int32
 	UserName          string
@@ -75,12 +98,12 @@ type User struct {
 	UniFriend   int
 	DisplayName string
 
-	ChatRoomId int
+	ChatRoomID int
 	KeyWord    string
 
 	MemberStatus int
 
-	EncryChatRoomId string
+	EncryChatRoomID string
 	IsOwner         int
 }
 
@@ -88,11 +111,13 @@ func (u *User) String() string {
 	return fmt.Sprintf("[user] username:%s nickname:%s, remark:%s, mc:%d sign:%s", u.UserName, u.NickName, u.RemarkName, u.MemberCount, u.Signature)
 }
 
+// SyncKeyList 用于同步消息的KEY
 type SyncKeyList struct {
 	Count int
 	List  []SyncKey
 }
 
+// SyncKey KEY|VAL
 type SyncKey struct {
 	Key int
 	Val int
@@ -133,9 +158,10 @@ type AppInfo struct {
 	Type  int
 }
 
+// ReceivedMessage 收到的消息
 type ReceivedMessage struct {
 	IsGroup       bool
-	MsgId         string
+	MsgID         string
 	Content       string
 	FromUserName  string
 	ToUserName    string
@@ -145,7 +171,7 @@ type ReceivedMessage struct {
 	OriginContent string
 	At            string
 	AtUser        *User
-	Url           string
+	URL           string
 
 	RecommendInfo *RecommendInfo
 }
@@ -186,7 +212,7 @@ type EmotionMessage struct {
 	Type         int
 }
 
-// Request
+// BaseRequest Response 中 BaseRequest
 type BaseRequest struct {
 	Uin      string
 	Sid      string
@@ -194,6 +220,7 @@ type BaseRequest struct {
 	DeviceID string
 }
 
+// InitRequest TODO
 type InitRequest struct {
 	BaseRequest        *BaseRequest
 	Msg                interface{}
@@ -202,8 +229,8 @@ type InitRequest struct {
 	Code               int
 	FromUserName       string
 	ToUserName         string
-	ClientMsgId        int
-	ClientMediaId      int
+	ClientMsgID        int
+	ClientMediaID      int
 	TotalLen           int
 	StartPos           int
 	DataLen            int
@@ -223,12 +250,13 @@ type InitRequest struct {
 	Topic              string
 }
 
-// Response 响应结构体
+// BaseResponse 响应结构体
 type BaseResponse struct {
 	Ret    int
 	ErrMsg string
 }
 
+// InitResponse TODO1
 type InitResponse struct {
 	BaseResponse *BaseResponse `json:"BaseResponse"`
 	Count        int           `json:"Count"`
@@ -238,6 +266,7 @@ type InitResponse struct {
 	User         *User
 }
 
+// ContactResponse TODO
 type ContactResponse struct {
 	BaseResponse *BaseResponse `json:"BaseResponse"`
 	MemberCount  int           `json:"MemberCount"`
@@ -245,6 +274,7 @@ type ContactResponse struct {
 	Seq          int           `json:"Seq"`
 }
 
+// ReceiveResponse TODO
 type ReceiveResponse struct {
 	BaseResponse    *BaseResponse     `json:"BaseResponse"`
 	AddMsgCount     int               `json:"AddMsgCount"`
@@ -253,8 +283,9 @@ type ReceiveResponse struct {
 	ModContactList  []*User           `json:"ModContactList"`
 }
 
+// ReceiveMessage TODO
 type ReceiveMessage struct {
-	MsgId                string
+	MsgID                string
 	FromUserName         string
 	ToUserName           string
 	MsgType              int
@@ -266,31 +297,33 @@ type ReceiveMessage struct {
 	PlayLength           int
 	FileName             string
 	FileSize             string
-	MediaId              string
-	Url                  string
+	MediaID              string
+	URL                  string
 	AddMsgType           int
 	StatusNotifyCode     int
 	StatusNotifyUserName string
 	RecommendInfo        *RecommendInfo
 	ForwardFlag          int
 	AppInfo              *AppInfo
-	HasProductId         int
+	HasProductID         int
 	Ticket               string
 	ImgHeight            int
 	ImgWidth             int
 	SubMsgType           int
-	NewMsgId             uint64
+	NewMsgID             uint64
 	OriContent           string
 	EncryFileName        string
 }
 
+// OplogRequest TODO
 type OplogRequest struct {
 	BaseRequest *BaseRequest
 	UserName    string
-	CmdId       int
+	CmdID       int
 	RemarkName  string
 }
 
+// OplogResponse TODO
 type OplogResponse struct {
 	BaseResponse *BaseResponse `json:"BaseResponse"`
 }

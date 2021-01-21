@@ -3,27 +3,32 @@ package wx
 import (
 	"errors"
 	"fmt"
+
 	"github.com/mdp/qrterminal"
 
-	"moii/internal/log"
 	"net/http"
 	"net/url"
 	"os"
 	"strings"
 	"sync"
 	"time"
+
+	"github.com/xiaxin/moii/log"
 )
 
 const (
 	ErrorUserLogout = "user logout"
 
-	TerminalMode       = 0
+	// TerminalMode 命令行
+	TerminalMode = 0
+	// TerminalModeGoland GoLand
 	TerminalModeGoland = 1
 )
 
+// Session 会话周期
 type Session struct {
-	WxConfig       *WebConfig
-	WxXmlConfig    *WebXmlConfig
+	WxConfig       *WxConfig
+	WxXMLConfig    *WebXMLConfig
 	muCookie       sync.RWMutex
 	Cookies        []*http.Cookie
 	SynKeyList     *SyncKeyList
@@ -40,24 +45,26 @@ type Session struct {
 	qrmode        int
 	State         uint8
 
+	// 退出 Chan
 	Exit chan struct{}
 }
 
+// CreateSession 创建SESSION qrmode
 func CreateSession(qrmode int) (*Session, error) {
 	session := &Session{
-		WxConfig:    DefaultWebConfig,
-		WxXmlConfig: &WebXmlConfig{},
+		WxConfig:    DefaultWebConfig, // 配置
+		WxXMLConfig: &WebXMLConfig{},  // XML配置 TODO
 		//QrcodeUUID:  uuid,
 		// TODO 迁移完成时 需要 使用 Api接入方式 处理
 		//Api:         api,
-		CreateTime: time.Now().Unix(),
+		CreateTime: time.Now().Unix(), // 时间
 
-		PluginManager: DefaultPluginManager,
+		PluginManager: DefaultPluginManager, //  插件管理器
 
-		OnLoginAvatar: func(string) error {
+		OnLoginAvatar: func(string) error { // TODO
 			return nil
 		},
-		AfterLogin: func() error {
+		AfterLogin: func() error { // TODO
 			return nil
 		},
 		qrmode: qrmode,
@@ -71,10 +78,11 @@ func CreateSession(qrmode int) (*Session, error) {
 	return session, nil
 }
 
+// Login wx.JsLogin 获取UUID
 func (s *Session) Login() error {
 	uuid, err := WebJsLogin(s.WxConfig)
 
-	log.Info(uuid)
+	log.Infof("[session] [login] uuid:%s", uuid)
 
 	if err != nil {
 		return err
@@ -102,19 +110,21 @@ func (s *Session) Login() error {
 //	s.Pipeline = pipeline
 //}
 
+// SetCookies 设置Cookie
 func (s *Session) SetCookies(cookies []*http.Cookie) {
 	s.muCookie.Lock()
 	defer s.muCookie.Unlock()
 	s.Cookies = cookies
 }
 
+// GetCookies 获取Cookie
 func (s *Session) GetCookies() []*http.Cookie {
 	s.muCookie.RLock()
 	defer s.muCookie.RUnlock()
 	return s.Cookies
 }
 
-// 消息生产者
+// Producer 消息生产者
 func (s *Session) Producer(msg chan []byte, errChan chan error) {
 	log.Info("entering synccheck loop")
 loop1:
@@ -126,7 +136,7 @@ loop1:
 		)
 		for i := 0; i <= 10; i++ {
 			//  TODO 检查状态
-			ret, sel, err = SyncCheck(s.WxConfig, s.WxXmlConfig, s.GetCookies(), s.WxConfig.SyncSrv, s.SynKeyList)
+			ret, sel, err = SyncCheck(s.WxConfig, s.WxXMLConfig, s.GetCookies(), s.WxConfig.SyncSrv, s.SynKeyList)
 			if err != nil {
 				if i >= 10 {
 					log.Errorf("SyncCheck error:(%s) try time %d ret %d selector %d\n", err.Error(), i, ret, sel)
@@ -143,7 +153,7 @@ loop1:
 			// check success
 			// new message
 			for i := 0; i <= 10; i++ {
-				cookies, err := WebWxSync(s.WxConfig, s.WxXmlConfig, s.GetCookies(), msg, s.SynKeyList)
+				cookies, err := WebWxSync(s.WxConfig, s.WxXMLConfig, s.GetCookies(), msg, s.SynKeyList)
 				if err != nil {
 					if i >= 10 {
 						log.Error("Err WebWxSync try  %s try %d", err.Error(), i)
@@ -169,17 +179,19 @@ loop1:
 
 }
 
+// IsLogout 是否退出
 func (s *Session) IsLogout(code int) bool {
 	_, has := LogoutSign[code]
 	return has
 }
 
+// ScanWaiter （检查二维码状态）
 func (s *Session) ScanWaiter(onAvatar func(string) error) error {
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 	//  每秒发起一次检查
 	for range ticker.C {
-		redirectUri, err := WebLogin(s.WxConfig, s.QrcodeUUID, "0")
+		redirectURI, err := WebLogin(s.WxConfig, s.QrcodeUUID, "0")
 		if err != nil {
 			//  TODO
 			log.Warnf("ScanWaiter Error %s", err)
@@ -189,6 +201,7 @@ func (s *Session) ScanWaiter(onAvatar func(string) error) error {
 				strings.Contains(err.Error(), "window.code=0"):
 				return err
 			case strings.Contains(err.Error(), "window.code=201"):
+				// 二维码被扫描
 				avatar, err := GetLoginAvatar(err.Error())
 				if err != nil {
 					return err
@@ -198,30 +211,32 @@ func (s *Session) ScanWaiter(onAvatar func(string) error) error {
 				}
 			}
 		} else {
-			s.WxConfig.RedirectUri = redirectUri
-			s.AnalizeVersion(s.WxConfig.RedirectUri)
+			s.WxConfig.RedirectURI = redirectURI
+			s.AnalizeVersion(s.WxConfig.RedirectURI)
 			break
 		}
 	}
 	return nil
 }
 
+// AnalizeVersion TODO
 func (s *Session) AnalizeVersion(uri string) {
 	u, _ := url.Parse(uri)
 
 	// version may change
 	s.WxConfig.CgiDomain = u.Scheme + "://" + u.Host
-	s.WxConfig.CgiUrl = s.WxConfig.CgiDomain + "/cgi-bin/mmwebwx-bin"
+	s.WxConfig.CgiURL = s.WxConfig.CgiDomain + "/cgi-bin/mmwebwx-bin"
 
 	for _, urlGroup := range URLPool {
-		if strings.Contains(u.Host, urlGroup.IndexUrl) {
-			s.WxConfig.SyncSrv = urlGroup.SyncUrl
-			s.WxConfig.UploadUrl = fmt.Sprintf("https://%s/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json", urlGroup.UploadUrl)
+		if strings.Contains(u.Host, urlGroup.IndexURL) {
+			s.WxConfig.SyncSrv = urlGroup.SyncURL
+			s.WxConfig.UploadURL = fmt.Sprintf("https://%s/cgi-bin/mmwebwx-bin/webwxuploadmedia?f=json", urlGroup.UploadURL)
 			return
 		}
 	}
 }
 
+// LoginAndServe 处理逻辑
 func (s *Session) LoginAndServe(useCache bool) error {
 
 	var (
@@ -239,7 +254,7 @@ func (s *Session) LoginAndServe(useCache bool) error {
 		}
 		var cookies []*http.Cookie
 		// update cookies
-		if cookies, err = WebNewLoginPage(s.WxConfig, s.WxXmlConfig, s.WxConfig.RedirectUri); err != nil {
+		if cookies, err = WebNewLoginPage(s.WxConfig, s.WxXMLConfig, s.WxConfig.RedirectURI); err != nil {
 			return err
 		}
 		s.SetCookies(cookies)
@@ -247,7 +262,7 @@ func (s *Session) LoginAndServe(useCache bool) error {
 	}
 
 	//  初始化 ContactList 中 有常用 用户 和 群组
-	jb, err := WebWxInit(s.WxConfig, s.WxXmlConfig)
+	jb, err := WebWxInit(s.WxConfig, s.WxXMLConfig)
 
 	if err != nil {
 		return err
@@ -272,7 +287,7 @@ func (s *Session) LoginAndServe(useCache bool) error {
 	s.SynKeyList = msg.SyncKey
 
 	//  状态通知
-	ret, err := WebWxStatusNotify(s.WxConfig, s.WxXmlConfig, s.Owner)
+	ret, err := WebWxStatusNotify(s.WxConfig, s.WxXMLConfig, s.Owner)
 	if err != nil {
 		return err
 	}
@@ -281,7 +296,7 @@ func (s *Session) LoginAndServe(useCache bool) error {
 	}
 
 	//  获取个人联系人
-	cb, err := WebWxGetContact(s.WxConfig, s.WxXmlConfig, s.GetCookies())
+	cb, err := WebWxGetContact(s.WxConfig, s.WxXMLConfig, s.GetCookies())
 	if err != nil {
 		return err
 	}
@@ -315,23 +330,29 @@ func (s *Session) serve() error {
 	for {
 		select {
 		case m := <-msg:
-			go s.Consumer(m)
+			resp, err := ParseReceiveResponse(m)
+
+			if nil != err {
+				log.Infof("[session] [serve] [parse-receive] error:%s", err)
+			} else {
+				go s.Consumer(resp)
+			}
 		case err := <-errChan:
 			return err
 		}
 	}
 }
 
-//  TODO 分析具体的消息体 整理出消息协议。
-func (s *Session) Consumer(msg []byte) {
+// Consumer  TODO 分析具体的消息体 整理出消息协议。
+func (s *Session) Consumer(receive *ReceiveResponse) {
 
 	//  人员变更时都会触发 ModContactList 和 ModContactCount 的变更
-	receive, err := ParseReceiveResponse(msg)
+	// receive, err := ParseReceiveResponse(msg)
 
-	if nil != err {
-		log.Error("ParseReceiveResponse Error %s", err)
-		return
-	}
+	// if nil != err {
+	// 	log.Error("ParseReceiveResponse Error %s", err)
+	// 	return
+	// }
 
 	//  TODO 更新动作 应该新起一个  GoRoutine 执行，并且在MsgList 之后执行
 	if receive.ModContactCount > 0 {
@@ -372,19 +393,20 @@ func (s *Session) Consumer(msg []byte) {
 	}
 }
 
+// Analize TODO
 func (s *Session) Analize(msg *ReceiveMessage) *ReceivedMessage {
 	rmsg := &ReceivedMessage{
-		MsgId:         msg.MsgId,
+		MsgID:         msg.MsgID,
 		OriginContent: msg.Content,
 		FromUserName:  msg.FromUserName,
 		ToUserName:    msg.ToUserName,
 		MsgType:       msg.MsgType,
 		SubType:       msg.SubMsgType,
-		Url:           msg.Url,
+		URL:           msg.URL,
 	}
 
 	// friend verify message
-	if rmsg.MsgType == MSG_FV {
+	if rmsg.MsgType == MsgFV {
 		rmsg.RecommendInfo = msg.RecommendInfo
 	}
 
@@ -407,7 +429,7 @@ func (s *Session) Analize(msg *ReceiveMessage) *ReceivedMessage {
 		rmsg.Content = rmsg.OriginContent
 	}
 
-	if rmsg.MsgType == MSG_TEXT &&
+	if rmsg.MsgType == MsgText &&
 		//  检查内容
 		len(rmsg.Content) > 1 &&
 		//  检查 @
@@ -437,7 +459,7 @@ func (s *Session) Analize(msg *ReceiveMessage) *ReceivedMessage {
 	return rmsg
 }
 
-// recv
+// Recv 接收消息
 func (s *Session) Recv(c *Contact, msg *ReceivedMessage) {
 	// TODO 这里要处理 panic
 	for _, plugin := range c.plugins {
@@ -445,7 +467,7 @@ func (s *Session) Recv(c *Contact, msg *ReceivedMessage) {
 	}
 }
 
-//
+// UpdateRemarkName 更新别名
 func (s *Session) UpdateRemarkName(username string, name string) error {
 
 	user := s.ContactManager.GetUser(username)
@@ -454,7 +476,7 @@ func (s *Session) UpdateRemarkName(username string, name string) error {
 		return errors.New("update remarkname error: user is nil")
 	}
 
-	ret, err := WebWxOplog(s.WxConfig, s.WxXmlConfig, s.Cookies, user, name)
+	ret, err := WebWxOplog(s.WxConfig, s.WxXMLConfig, s.Cookies, user, name)
 
 	if nil != err {
 		return err
@@ -465,9 +487,7 @@ func (s *Session) UpdateRemarkName(username string, name string) error {
 	return nil
 }
 
-/**
-  添加插件
-*/
+// AddPlugin 添加插件
 func (s *Session) AddPlugin(plugin Plugin) {
 	s.PluginManager.Add(plugin)
 }

@@ -4,12 +4,6 @@ import (
 	"fmt"
 )
 
-type Plugin interface {
-	Name() string
-	Type() int
-	String() string
-}
-
 const (
 	//  user plugin
 	PluginTypeUser = 1 << iota
@@ -26,39 +20,10 @@ func init() {
 	DefaultPluginManager = NewDefaultPluginManager()
 }
 
-//  管理器负责 管理插件 和 命中插件执行。
-type PluginManager interface {
-	//  获取插件
-	Get(name string) Plugin
-	//  添加插件
-	Add(plugin Plugin)
-	//  支持 String 输出
-	String() string
-
-	GetAll(t int) map[string]Plugin
-
-	Run(wrapper Plugin, sess *Session, msg *ReceivedMessage)
-}
-
-//  type=1
-type PluginText interface {
-	HandleText(sess *Session, msg *ReceivedMessage)
-}
-
-//  type=51
-type PluginInit interface {
-	HandleInit(sess *Session, msg *ReceivedMessage)
-}
-
-//  type = 49
-type PluginLink interface {
-	HandleLink(sess *Session, msg *ReceivedMessage)
-}
-
-type PluginWrapper struct {
-	plugin  Plugin
-	enabled bool
-}
+// type PluginWrapper struct {
+// 	plugin  Plugin
+// 	enabled bool
+// }
 
 type defaultPluginManager struct {
 	// all
@@ -70,6 +35,7 @@ type defaultPluginManager struct {
 	all    map[string]Plugin
 }
 
+// NewDefaultPluginManager 创建一个插件管理器
 func NewDefaultPluginManager() PluginManager {
 	return &defaultPluginManager{
 		plugins: make(map[string]Plugin),
@@ -101,36 +67,39 @@ func (dpm *defaultPluginManager) Add(plugin Plugin) {
 	}
 }
 
-func (dmp *defaultPluginManager) String() string {
-	return fmt.Sprintf("dmp count:%d all:%d users:%d groups:%d\n", len(dmp.plugins), len(dmp.users), len(dmp.groups), len(dmp.all))
+// String 文字说明
+func (dpm *defaultPluginManager) String() string {
+	return fmt.Sprintf("dmp count:%d all:%d users:%d groups:%d\n", len(dpm.plugins), len(dpm.users), len(dpm.groups), len(dpm.all))
 }
 
-func (dmp *defaultPluginManager) GetAll(t int) map[string]Plugin {
+// GetAll 获取所有
+func (dpm *defaultPluginManager) GetAll(t int) map[string]Plugin {
 	if t&PluginTypeAll == PluginTypeAll {
-		return dmp.all
+		return dpm.all
 	}
 
 	if t&PluginTypeUser == PluginTypeUser {
-		return dmp.users
+		return dpm.users
 	}
 
 	if t&PluginTypeGroup == PluginTypeGroup {
-		return dmp.groups
+		return dpm.groups
 	}
 
 	return nil
 }
 
-func (dmp *defaultPluginManager) Run(plugin Plugin, sess *Session, msg *ReceivedMessage) {
+// Run 运行
+func (dpm *defaultPluginManager) Run(plugin Plugin, sess *Session, msg *ReceivedMessage) {
 
 	switch msg.MsgType {
-	case MSG_TEXT:
+	case MsgText:
 		//  1 文本
 		if p, ok := plugin.(PluginText); ok {
 			p.HandleText(sess, msg)
 			return
 		}
-	case MSG_INIT:
+	case MsgInit:
 		//  51
 		if p, ok := plugin.(PluginInit); ok {
 			p.HandleInit(sess, msg)

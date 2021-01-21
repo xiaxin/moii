@@ -3,25 +3,13 @@ package wx
 import (
 	"errors"
 	"fmt"
-	"moii/internal/log"
 	"strings"
 	"sync"
+
+	"github.com/xiaxin/moii/log"
 )
 
-type ContactManager interface {
-	AddUsers(users []*User)
-	AddUser(username string, user *User)
-	AddGroup(username string, user *User)
-	Get(username string) *Contact
-	GetByNickname(nickname string) *Contact
-	GetContact(username string) *Contact
-	GetUser(username string) *User
-	GetData() map[string]*Contact
-	PullBatchContractByUsername(username string)
-	PullBatchContracts(user []*User)
-	GetGroupContact(groups []*User) []*User
-}
-
+// Contact 联系人
 type Contact struct {
 	user    *User
 	cm      ContactManager
@@ -216,7 +204,7 @@ func (cm *contactManager) PullBatchContractByUsername(username string) {
 	var users []*User
 
 	cm.PullBatchContracts(append(users, &User{
-		EncryChatRoomId: "",
+		EncryChatRoomID: "",
 		UserName:        username,
 	}))
 }
@@ -238,7 +226,7 @@ func (cm *contactManager) GetGroupContact(groups []*User) []*User {
 		return nil
 	}
 
-	b, err := WebWxBatchGetContact(cm.session.WxConfig, cm.session.WxXmlConfig, cm.session.Cookies, groups)
+	b, err := WebWxBatchGetContact(cm.session.WxConfig, cm.session.WxXMLConfig, cm.session.Cookies, groups)
 
 	batch, err := ParseInitResponse(b)
 	if nil != err {
