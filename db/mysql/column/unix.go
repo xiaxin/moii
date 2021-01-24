@@ -5,32 +5,15 @@ import (
 	"fmt"
 	"strconv"
 	"time"
-
-	xtime "github.com/xiaxin/moii/time"
 )
 
-// Date Mysql Column date
-type Date struct {
+// Unix Mysql Column timestamp
+type Unix struct {
 	time.Time
 }
 
-// NewDate 创建Date
-func NewDate(val string) (*Date, error) {
-	date, err := time.Parse(xtime.FormatYmd, val)
-
-	if nil != err {
-		return nil, err
-	}
-
-	return &Date{date}, nil
-}
-
-func (t *Date) String() string {
-	return t.Format(xtime.FormatYmd)
-}
-
 // UnmarshalJSON  []byte to struct val
-func (t *Date) UnmarshalJSON(data []byte) error {
+func (t *Unix) UnmarshalJSON(data []byte) error {
 	value := string(data)
 	float, err := strconv.ParseInt(value, 10, 32)
 
@@ -43,31 +26,26 @@ func (t *Date) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON  json {data} to []byte
-func (t Date) MarshalJSON() ([]byte, error) {
+func (t Unix) MarshalJSON() ([]byte, error) {
 	formatted := fmt.Sprintf(`"%s"`, t.String())
 	return []byte(formatted), nil
 }
 
 // Value return interface{}
-func (t Date) Value() (driver.Value, error) {
+func (t Unix) Value() (driver.Value, error) {
 	var zeroTime time.Time
 	if t.Time.UnixNano() == zeroTime.UnixNano() {
 		return nil, nil
 	}
-	return t.Format(xtime.FormatYmd), nil
+	return t.Unix(), nil
 }
 
 // Scan data to mysql
-func (t *Date) Scan(v interface{}) error {
+func (t *Unix) Scan(v interface{}) error {
 	value, ok := v.(time.Time)
 	if ok {
-		*t = Date{Time: value}
+		*t = Unix{Time: value}
 		return nil
 	}
 	return fmt.Errorf("can not convert %v to timestamp", v)
-}
-
-// Now 设置当前时间
-func (t *Date) Now() {
-	t.Time = time.Now()
 }

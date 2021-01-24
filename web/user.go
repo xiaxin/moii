@@ -1,8 +1,8 @@
 package web
 
+// User WEB 用户接口
 type User interface {
-	GetUid() uint
+	GetUID() uint
 	GetUserName() string
 	GetToken() string
 }
-

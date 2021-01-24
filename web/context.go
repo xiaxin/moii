@@ -19,17 +19,15 @@ func SetOAuthToken(ctx *gin.Context, token oauth2.TokenInfo) {
 func GetOAuthToken(ctx *gin.Context) (oauth2.TokenInfo, bool) {
 	ti, _ := ctx.Get(KeyOAuth)
 	token, ok := ti.(oauth2.TokenInfo)
-	exists := token!= nil && ok
+	exists := token != nil && ok
 	return token, exists
 }
-
-
 
 func SetUser(ctx *gin.Context, user User) {
 	ctx.Set(KeyUser, user)
 }
 
-//  从上下文获取中间件
+// GetUser 从上下文获取中间件
 func GetUser(ctx *gin.Context) (User, bool) {
 	diI, _ := ctx.Get(KeyUser)
 	di, ok := diI.(User)
@@ -37,12 +35,12 @@ func GetUser(ctx *gin.Context) (User, bool) {
 	return di, exists
 }
 
-
+// SetDig 设在上下文设置DIG
 func SetDig(ctx *gin.Context, dig *dig.Dig) {
 	ctx.Set(KeyDig, dig)
 }
 
-//  从上下文获取中间件
+// GetDig 从上下文获取中间件
 func GetDig(ctx *gin.Context) (*dig.Dig, bool) {
 	diI, _ := ctx.Get(KeyDig)
 	di, ok := diI.(*dig.Dig)
@@ -50,6 +48,7 @@ func GetDig(ctx *gin.Context) (*dig.Dig, bool) {
 	return di, exists
 }
 
+// Next 封装NEXT
 func Next(ctx *gin.Context) {
 	ctx.Next()
 }

@@ -9,28 +9,17 @@ import (
 	xtime "github.com/xiaxin/moii/time"
 )
 
-// Date Mysql Column date
-type Date struct {
+// DateTime Mysql Column datetime
+type DateTime struct {
 	time.Time
 }
 
-// NewDate 创建Date
-func NewDate(val string) (*Date, error) {
-	date, err := time.Parse(xtime.FormatYmd, val)
-
-	if nil != err {
-		return nil, err
-	}
-
-	return &Date{date}, nil
-}
-
-func (t *Date) String() string {
-	return t.Format(xtime.FormatYmd)
+func (t *DateTime) String() string {
+	return t.Format(xtime.FormatYmdHis)
 }
 
 // UnmarshalJSON  []byte to struct val
-func (t *Date) UnmarshalJSON(data []byte) error {
+func (t *DateTime) UnmarshalJSON(data []byte) error {
 	value := string(data)
 	float, err := strconv.ParseInt(value, 10, 32)
 
@@ -43,31 +32,32 @@ func (t *Date) UnmarshalJSON(data []byte) error {
 }
 
 // MarshalJSON  json {data} to []byte
-func (t Date) MarshalJSON() ([]byte, error) {
-	formatted := fmt.Sprintf(`"%s"`, t.String())
-	return []byte(formatted), nil
+func (t DateTime) MarshalJSON() ([]byte, error) {
+	//  返回的字符串需要加引号
+	datetime := fmt.Sprintf(`"%s"`, t.String())
+	return []byte(datetime), nil
 }
 
 // Value return interface{}
-func (t Date) Value() (driver.Value, error) {
+func (t DateTime) Value() (driver.Value, error) {
 	var zeroTime time.Time
 	if t.Time.UnixNano() == zeroTime.UnixNano() {
 		return nil, nil
 	}
-	return t.Format(xtime.FormatYmd), nil
+	return t.Time, nil
 }
 
 // Scan data to mysql
-func (t *Date) Scan(v interface{}) error {
+func (t *DateTime) Scan(v interface{}) error {
 	value, ok := v.(time.Time)
 	if ok {
-		*t = Date{Time: value}
+		*t = DateTime{Time: value}
 		return nil
 	}
 	return fmt.Errorf("can not convert %v to timestamp", v)
 }
 
 // Now 设置当前时间
-func (t *Date) Now() {
+func (t *DateTime) Now() {
 	t.Time = time.Now()
 }

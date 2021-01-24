@@ -2,11 +2,12 @@ package log
 
 import (
 	"fmt"
+	"os"
+	"time"
+
 	"go.uber.org/multierr"
 	"go.uber.org/zap"
 	"go.uber.org/zap/zapcore"
-	"os"
-	"time"
 )
 
 var (
@@ -87,7 +88,6 @@ func New(conf *zap.Config, opts ...zap.Option) *Logger {
 		base: logger.WithOptions(opts...),
 	}
 }
-
 
 func (l *Logger) Named(name string) *Logger {
 	return &Logger{
@@ -197,7 +197,7 @@ func (l *Logger) DsError(args ...interface{}) {
 	l.DsLog().Error(args...)
 }
 
-func (l *Logger) DsErrorf(template string, args ...interface{})  {
+func (l *Logger) DsErrorf(template string, args ...interface{}) {
 	l.DsLog().Errorf(template, args...)
 }
 
@@ -297,6 +297,14 @@ func Info(args ...interface{}) {
 
 func Infof(template string, args ...interface{}) {
 	log.Infof(template, args...)
+}
+
+func Debug(args ...interface{}) {
+	log.Debug(args...)
+}
+
+func Debugf(template string, args ...interface{}) {
+	log.Debugf(template, args...)
 }
 
 func Warn(args ...interface{}) {
