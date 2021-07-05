@@ -14,7 +14,7 @@ type DateTime struct {
 	time.Time
 }
 
-func (t *DateTime) String() string {
+func (t DateTime) String() string {
 	return t.Format(xtime.FormatYmdHis)
 }
 

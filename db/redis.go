@@ -2,10 +2,11 @@ package db
 
 import (
 	"errors"
+	"time"
+
 	"github.com/gomodule/redigo/redis"
 	"github.com/xiaxin/moii/db/redis/lock"
 	"github.com/xiaxin/moii/log"
-	"time"
 )
 
 var (
@@ -107,7 +108,6 @@ func (r *Redis) CloseConnection() error {
 func (r *Redis) Send(command string, args ...interface{}) (err error) {
 	return r.pool.Get().Send(command, args...)
 }
-
 
 func (r *Redis) Do(command string, args ...interface{}) (reply interface{}, err error) {
 	c := r.pool.Get()

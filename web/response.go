@@ -1,12 +1,17 @@
 package web
 
 import (
-	"github.com/gin-gonic/gin"
 	"net/http"
+
+	"github.com/gin-gonic/gin"
 )
 
 func Json(ctx *gin.Context, data interface{}) {
 	ctx.JSON(200, data)
+}
+
+func JsonOK(ctx *gin.Context) {
+	ctx.JSON(200, gin.H{"message": "ok"})
 }
 
 func JsonData(ctx *gin.Context, data interface{}) {

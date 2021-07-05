@@ -25,10 +25,9 @@ const (
 	FormatZeroHour12 = "03"
 
 	//  2020-01-01 00:00:00 时间戳
-	Unix2020         = 1577836800
+	Unix2020 = 1577836800
 
-
-	Day                 = 24 * xtime.Hour
+	Day = 24 * xtime.Hour
 )
 
 // Time be used to MySql timestamp converting.
@@ -136,9 +135,14 @@ func NowUnix2020() int64 {
 }
 
 func TimeScoreEncode(score int64) int64 {
-	return score * 100000000 + NowUnix2020()
+	return score*100000000 + NowUnix2020()
 }
 
 func TimeScoreDecode(score int64) int64 {
 	return score / 100000000
+}
+
+// APINowUnix 生成 API的时间戳
+func APINowUnix() int64 {
+	return xtime.Now().UnixNano() / 1000000
 }

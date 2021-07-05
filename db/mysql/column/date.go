@@ -15,17 +15,17 @@ type Date struct {
 }
 
 // NewDate 创建Date
-func NewDate(val string) (*Date, error) {
+func NewDate(val string) (Date, error) {
 	date, err := time.Parse(xtime.FormatYmd, val)
 
 	if nil != err {
-		return nil, err
+		return Date{}, err
 	}
 
-	return &Date{date}, nil
+	return Date{date}, nil
 }
 
-func (t *Date) String() string {
+func (t Date) String() string {
 	return t.Format(xtime.FormatYmd)
 }
 
@@ -70,4 +70,16 @@ func (t *Date) Scan(v interface{}) error {
 // Now 设置当前时间
 func (t *Date) Now() {
 	t.Time = time.Now()
+}
+
+// SetString 设置字符串
+func (t *Date) SetString(v string) error {
+	date, err := time.Parse(xtime.FormatYmd, v)
+
+	if nil != err {
+		return err
+	}
+
+	t.Time = date
+	return nil
 }

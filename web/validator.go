@@ -12,6 +12,7 @@ import (
 	ut "github.com/go-playground/universal-translator"
 	validator "github.com/go-playground/validator/v10"
 	zh_translations "github.com/go-playground/validator/v10/translations/zh"
+	"github.com/xiaxin/moii/log"
 )
 
 var (
@@ -73,6 +74,7 @@ func kindOfData(data interface{}) reflect.Kind {
 	return valueType
 }
 
+// Validate 验证
 func Validate(ctx *gin.Context, obj interface{}) map[string]string {
 	resp := make(map[string]string, 0)
 
@@ -83,6 +85,8 @@ func Validate(ctx *gin.Context, obj interface{}) map[string]string {
 		if bool {
 			m = tranFn.FieldTranslate()
 		}
+
+		log.Infof("%v", err)
 
 		switch err.(type) {
 		case validator.ValidationErrors:
@@ -104,6 +108,8 @@ func Validate(ctx *gin.Context, obj interface{}) map[string]string {
 		case *strconv.NumError:
 			// TODO  输入字符串 numeric 时 报错
 			resp["input"] = err.Error()
+		default:
+			resp["message"] = err.Error()
 		}
 
 		return resp
